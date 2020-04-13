@@ -15,6 +15,7 @@ import PlaceholderImageElement from './elements/placeholder-image'
 import ImageElement from './elements/image'
 import ChartElement from './elements/chart'
 import SlideNumberElement from './elements/slide-number'
+import CurrentDateElement from './elements/current-date'
 
 type Placeholder = PlaceholderImageElement & PlaceholderTextElement
 
@@ -117,6 +118,20 @@ export class Master {
                     this.data.push(
                         new TextElement(
                             object[key].text,
+                            object[key].options,
+                            this.relations
+                        )
+                    )
+                } else if (MASTER_OBJECTS[key] && key === 'current-date') {
+                    this.data.push(
+                        new CurrentDateElement(
+                            object[key].options,
+                            this.relations
+                        )
+                    )
+                } else if (MASTER_OBJECTS[key] && key === 'slide-number') {
+                    this.data.push(
+                        new SlideNumberElement(
                             object[key].options,
                             this.relations
                         )
