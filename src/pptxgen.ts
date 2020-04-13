@@ -220,7 +220,9 @@ export default class PptxGenJS {
         return this._presLayout
     }
 
-    constructor() {
+    constructor({
+        presLayout = DEF_PRES_LAYOUT
+    }: { presLayout?: string } = {}) {
         // Set available layouts
         this.LAYOUTS = {
             LAYOUT_4x3: {
@@ -257,11 +259,7 @@ export default class PptxGenJS {
         this._subject = 'PptxGenJS Presentation'
         this._title = 'PptxGenJS Presentation'
         // PptxGenJS props
-        this._presLayout = {
-            name: this.LAYOUTS[DEF_PRES_LAYOUT].name,
-            width: this.LAYOUTS[DEF_PRES_LAYOUT].width,
-            height: this.LAYOUTS[DEF_PRES_LAYOUT].height
-        }
+        this._presLayout = this.LAYOUTS[presLayout]
         this._rtlMode = false
         this._isBrowser = false
         this._theme = new Theme()
