@@ -78,10 +78,26 @@ function genXmlParagraphProperties(textObj: IText, isDefault: boolean): string {
         }
 
         if (textObj.options.lineSpacing) {
+            // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_lnSpc_topic_ID0E3KTKB.html?hl=a%3Alnspc
+            let lineSpacingType, lineSpacingVal
+            if (typeof this.lineSpacing === 'number') {
+                // backward compatibility - fallback Spacing Points
+                lineSpacingType = 'spcPts'
+                lineSpacingVal = `${this.lineSpacing}00`
+            } else if (typeof this.lineSpacing === 'string') {
+                const lnSpc = String(this.lineSpacing).toLowerCase()
+                if (lnSpc.indexOf('pct') !== -1) {
+                    lineSpacingType = 'spcPct'
+                    lineSpacingVal = Number.parseFloat(lnSpc) * 1000
+                } else if (lnSpc.indexOf('pts') !== -1) {
+                    lineSpacingType = 'spcPts'
+                    lineSpacingVal = Number.parseFloat(lnSpc) * 100
+                }
+            }
             strXmlLnSpc =
-                '<a:lnSpc><a:spcPts val="' +
-                textObj.options.lineSpacing +
-                '00"/></a:lnSpc>'
+                `<a:lnSpc><a:${lineSpacingType} val="` +
+                lineSpacingVal +
+                '"/></a:lnSpc>'
         }
 
         // OPTION: indent
