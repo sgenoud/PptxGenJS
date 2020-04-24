@@ -30,7 +30,8 @@ export interface ParagraphPropertiesOptions {
 export default class ParagraphProperties {
     bullet: Bullet
     align: TEXT_HALIGN
-    lineSpacing?: number
+    lineSpacingVal?: string
+    lineSpacingType?: 'spcPct' | 'spcPts'
     indentLevel?: number
     paraSpaceBefore?: number
     paraSpaceAfter?: number
@@ -77,26 +78,24 @@ export default class ParagraphProperties {
 
         this.rtlMode = rtlMode
 
-        this.lineSpacing = lineSpacing
+        // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_lnSpc_topic_ID0E3KTKB.html?hl=a%3Alnspc
+        if (typeof lineSpacing === 'number') {
+            // backward compatibility - fallback Spacing Points
+            this.lineSpacingType = 'spcPts'
+            this.lineSpacingVal = `${lineSpacing}00`
+        } else if (typeof lineSpacing === 'string') {
+            const lnSpc = lineSpacing.toLowerCase()
+            if (lnSpc.indexOf('pct') !== -1) {
+                this.lineSpacingType = 'spcPct'
+                this.lineSpacingVal = `${Number.parseFloat(lnSpc) * 1000}`
+            } else if (lnSpc.indexOf('pts') !== -1) {
+                this.lineSpacingType = 'spcPts'
+                this.lineSpacingVal = `${Number.parseFloat(lnSpc) * 100}`
+            }
+        }
     }
 
     render(presLayout, tag: string, body: string = ''): string {
-        // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_lnSpc_topic_ID0E3KTKB.html?hl=a%3Alnspc
-        let lineSpacingType, lineSpacingVal
-        if (typeof this.lineSpacing === 'number') {
-            // backward compatibility - fallback Spacing Points
-            lineSpacingType = 'spcPts'
-            lineSpacingVal = `${this.lineSpacing}00`
-        } else if (typeof this.lineSpacing === 'string') {
-            const lnSpc = String(this.lineSpacing).toLowerCase()
-            if (lnSpc.indexOf('pct') !== -1) {
-                lineSpacingType = 'spcPct'
-                lineSpacingVal = Number.parseFloat(lnSpc) * 1000
-            } else if (lnSpc.indexOf('pts') !== -1) {
-                lineSpacingType = 'spcPts'
-                lineSpacingVal = Number.parseFloat(lnSpc) * 100
-            }
-        }
         return `
         <${tag} ${[
             this.rtlMode ? ' rtl="1" ' : '',
@@ -106,8 +105,8 @@ export default class ParagraphProperties {
         ].join('')}>
           ${[
               // IMPORTANT: the body element require strict ordering - anything out of order is ignored. (PPT-Online, PPT for Mac)
-              lineSpacingVal
-                  ? `<a:lnSpc><a:${lineSpacingType} val="${lineSpacingVal}"/></a:lnSpc>`
+              this.lineSpacingVal
+                  ? `<a:lnSpc><a:${this.lineSpacingType} val="${this.lineSpacingVal}"/></a:lnSpc>`
                   : '',
               this.paraSpaceBefore
                   ? `<a:spcBef><a:spcPts val="${this.paraSpaceBefore *
