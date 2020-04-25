@@ -24,13 +24,14 @@ export interface ParagraphPropertiesOptions {
     indentLevel?: number | string
     bullet?: BulletOptions
     align?: string
-    lineSpacing?: number
+    lineSpacing?: number | string
 }
 
 export default class ParagraphProperties {
     bullet: Bullet
     align: TEXT_HALIGN
-    lineSpacing?: number
+    lineSpacingVal?: string
+    lineSpacingType?: 'spcPct' | 'spcPts'
     indentLevel?: number
     paraSpaceBefore?: number
     paraSpaceAfter?: number
@@ -77,8 +78,21 @@ export default class ParagraphProperties {
 
         this.rtlMode = rtlMode
 
-        this.lineSpacing =
-            lineSpacing && !isNaN(lineSpacing) ? lineSpacing : null
+        // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_lnSpc_topic_ID0E3KTKB.html?hl=a%3Alnspc
+        if (typeof lineSpacing === 'number') {
+            // backward compatibility - fallback Spacing Points
+            this.lineSpacingType = 'spcPts'
+            this.lineSpacingVal = `${lineSpacing}00`
+        } else if (typeof lineSpacing === 'string') {
+            const lnSpc = lineSpacing.toLowerCase()
+            if (lnSpc.indexOf('pct') !== -1) {
+                this.lineSpacingType = 'spcPct'
+                this.lineSpacingVal = `${Number.parseFloat(lnSpc) * 1000}`
+            } else if (lnSpc.indexOf('pts') !== -1) {
+                this.lineSpacingType = 'spcPts'
+                this.lineSpacingVal = `${Number.parseFloat(lnSpc) * 100}`
+            }
+        }
     }
 
     render(presLayout, tag: string, body: string = ''): string {
@@ -91,8 +105,8 @@ export default class ParagraphProperties {
         ].join('')}>
           ${[
               // IMPORTANT: the body element require strict ordering - anything out of order is ignored. (PPT-Online, PPT for Mac)
-              this.lineSpacing
-                  ? `<a:lnSpc><a:spcPts val="${this.lineSpacing}00"/></a:lnSpc>`
+              this.lineSpacingVal
+                  ? `<a:lnSpc><a:${this.lineSpacingType} val="${this.lineSpacingVal}"/></a:lnSpc>`
                   : '',
               this.paraSpaceBefore
                   ? `<a:spcBef><a:spcPts val="${this.paraSpaceBefore *
