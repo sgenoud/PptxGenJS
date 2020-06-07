@@ -154,6 +154,8 @@ export default class TextElement implements ElementInterface {
     }
 
     render(idx, presLayout, placeholder) {
+        // // https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.field?view=openxml-2.8.1
+        const fld = placeholder ? placeholder.renderFldProps() : null
         return `
     <p:sp>
         <p:nvSpPr>
@@ -182,10 +184,12 @@ export default class TextElement implements ElementInterface {
                 )}
             </a:lstStyle>
             <a:p>
+                ${fld ? `<a:fld ${fld}>` : ''}
                 ${this.fragments
                     .map(fragment => fragment.render(presLayout))
                     .join('</a:p><a:p>')}
                 ${'' /* NOTE: Added 20180101 to address PPT-2007 issues */}
+                ${fld ? `</a:fld>` : ''}
 		        <a:endParaRPr lang="${this.lang || 'en-US'}" dirty="0"/>
             </a:p>
         </p:txBody>
