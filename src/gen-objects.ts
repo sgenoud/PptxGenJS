@@ -24,25 +24,37 @@ import SlideNumberElement from './elements/slide-number'
 export function addPlaceholdersToSlideLayouts(slide: Slide) {
     // Add all placeholders on this Slide that dont already exist
     ;(slide.slideLayout.data || []).forEach(slideLayoutObj => {
-        if (slideLayoutObj instanceof PlaceholderTextElement) {
-            // A: Search for this placeholder on Slide before we add
-            // NOTE: Check to ensure a placeholder does not already exist on the Slide
-            // They are created when they have been populated with text (ex: `slide.addText('Hi', { placeholder:'title' });`)
-            if (
-                slide.data.filter(slideObj => {
-                    return slideObj.placeholder === slideLayoutObj.name
-                }).length === 0
-            ) {
-                if (slideLayoutObj.placeholderType !== 'pic') {
-                    slide.data.push(
-                        new TextElement(
-                            '',
-                            { placeholder: slideLayoutObj.name },
-                            slide.relations
-                        )
-                    )
-                }
-            }
+        if (!(slideLayoutObj instanceof PlaceholderTextElement)) return
+        // A: Search for this placeholder on Slide before we add
+        // NOTE: Check to ensure a placeholder does not already exist on the Slide
+        // They are created when they have been populated with text (ex: `slide.addText('Hi', { placeholder:'title' });`)
+        if (
+            slide.data.filter(slideObj => {
+                return slideObj.placeholder === slideLayoutObj.name
+            }).length !== 0
+        )
+            return
+
+        const placeholderWithAutoField = fieldType => {
+            return new TextElement(
+                [{ text: '', options: {}, fieldType }],
+                { placeholder: slideLayoutObj.name },
+                slide.relations
+            )
+        }
+
+        if (slideLayoutObj.placeholderType === 'sldNum') {
+            slide.data.push(placeholderWithAutoField('slidenum'))
+        } else if (slideLayoutObj.placeholderType === 'dt') {
+            slide.data.push(placeholderWithAutoField('datetimeFigureOut'))
+        } else if (slideLayoutObj.placeholderType !== 'pic') {
+            slide.data.push(
+                new TextElement(
+                    '',
+                    { placeholder: slideLayoutObj.name },
+                    slide.relations
+                )
+            )
         }
     })
 }
